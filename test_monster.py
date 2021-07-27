@@ -1,10 +1,12 @@
 # -----------------------------------------------------------
-# Ryzobus v1.6
-# Basic tests for parameters module
-#
+# Monsters v1.0 - Test file
+# A monster simulation to look at monsters traversing a map of 
+# countries. For more information see Readme.MD
+# 
 # (C) 2021 Hayden Eastwood,
 # Contact: hayden.eastwood@gmail.com, +263 779 451 256
 # -----------------------------------------------------------
+
 import pytest
 from monster import MonsterInvasion
 import random
@@ -12,7 +14,7 @@ import random
 @pytest.fixture
 def monster_configuration(capfd):
     random.seed(11)
-    monster = MonsterInvasion('world_map_small.txt')
+    monster = MonsterInvasion('data/world_map_small.txt')
     out, err = capfd.readouterr() # Discard error from missing user input
     monster.initial_number_of_monsters = 15
     return monster

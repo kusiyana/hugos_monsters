@@ -1,3 +1,12 @@
+# -----------------------------------------------------------
+# Monsters v1.0
+# Classes for a monster simulation to make monsters traverse a map of 
+# countries. For more information see the Readme.MD
+# 
+# (C) 2021 Hayden Eastwood,
+# Contact: hayden.eastwood@gmail.com, +263 779 451 256
+# -----------------------------------------------------------
+
 import sys
 import numpy as np
 import networkx as nx
@@ -6,8 +15,31 @@ import random
 class MonsterInvasion:    
     """ Class to govern all aspects of monster invasion of 
     global towns
+    
+    Index of main methods:
+        - __make_towns_map(town_file_name): 
+            Builds map from input map file
+        - parachute_monsters_in(self): 
+            Initialises simulation from map
+        - move_monsters(self):
+            Move monsters from town to town based on random probability
+        - make_monster_battles(self):
+            Test a configuration for monsters in multiple cities
+            and return a list if this is the case
+        - monsters_die(self):
+            Kill monsters idenfitied in make_monster_battles
+        - towns_die(self):
+            Kill towns identified in make_monster_battles
+        - write_output_file:
+            Write final map of remaining towns to file
+        - run(self, steps):
+            Run the correct sequence of methods to perform the full simulation
+            for a number of steps
+
     """
     
+    output_file_name = 'data/surviving_towns_out.txt'
+
     def __init__(self, towns_file, initial_number_of_monsters=0):        
         self.town_file_name = towns_file
         self.initial_number_of_monsters = initial_number_of_monsters         
@@ -15,10 +47,10 @@ class MonsterInvasion:
         self.__make_towns_map(towns_file)
         self.town_initial_state = self.town_graph.copy()             
         self.colonised_towns = {}
-        self.initial_number_of_towns = self.__number_of_remaining_towns()        
+        self.initial_number_of_towns = self.number_of_remaining_towns()        
         self.previous_colonised_towns = []
         self.trapped_monsters = []
-        self.__sanity_check()
+        self.__sanity_check()        
 
     def parachute_monsters_in(self):
         """ Parachute monsters in to random towns to begin with """        
@@ -115,15 +147,16 @@ class MonsterInvasion:
         print (f'Day:\t\t\t\t\t {day}')        
         print (f'Number of alive monsters: \t\t {self.__number_of_alive_monsters()}')
         # print (f'Trapped monsters: \t\t {self.trapped_monsters}')
-        print (f'Number of alive towns: \t\t\t {self.__number_of_remaining_towns()}')        
+        print (f'Number of alive towns: \t\t\t {self.number_of_remaining_towns()}')        
         print ('-----------------STATS---------------------')
         print (' ')
 
     def run(self, steps: int):
-        """ Run a simulation for n steps """           
+        """ Run a simulation for n steps """                  
         self.parachute_monsters_in()
         self.stats(0)         
         before_towns = self.colonised_towns.copy()
+        self.__log_io('--- STARTING MONSTER RAMPAGE ---')
         for d in range(1,steps+1):                                          
             self.move_monsters()                        
             if self.make_monster_battles():                
@@ -133,14 +166,15 @@ class MonsterInvasion:
                 self.__log_io('Monsters killed all of each other!') 
                 break
         self.stats(steps)
+        self.__log_io('Writing output file of remaining towns')        
+        self.write_output_file()        
+        self.__log_io('-------- FINISHED ---')
         return before_towns, self.colonised_towns, self.town_graph            
 
-    def draw_towns(self, file_name: str):
-        """ Plot graph of the towns if needed """                   
-        nx.draw_networkx(self.town_graph, arrows=True)
-        plt.tight_layout()
-        plt.savefig(file_name, format="PNG")
-        plt.clf()
+
+    def number_of_remaining_towns(self):  
+        return len(list(self.town_graph.nodes()))
+        
 
     # - - - - Private methods - - - -
     
@@ -151,7 +185,17 @@ class MonsterInvasion:
             sys.exit(0)
         return True
         
-        
+    def write_output_file(self):
+        """ Write final output file based on remaining towns """
+        file_out = open(self.output_file_name, "w")        
+        for town in self.town_graph.nodes():                           
+            direction_list = []
+            for edge in self.town_graph.edges(town):
+                direction_list.append(
+                    f"{nx.get_edge_attributes(self.town_graph, 'direction')[edge]}={edge[1]}"
+                    )            
+            file_out.write(f'{" ".join([town, " ".join(direction_list)])} \n')
+        file_out.close()
     
     @staticmethod
     def __log_io(message: str, level:int =1):
@@ -196,14 +240,20 @@ class MonsterInvasion:
         town_unpacked = town.replace('\n', '').split(' ')        
         town_name = town_unpacked[0]
         try:    
-            for town in town_unpacked[1:]:                
-                self.town_graph.add_edges_from([(town_name, town.split('=')[1])])
+            for town in town_unpacked[1:]:
+                direction_town = town.split('=')
+                self.town_graph.add_edges_from(
+                    [(town_name, town.split('=')[1])],
+                    direction= town.split('=')[0]
+                    )            
         except :
             raise RuntimeError ("Could not add 1 or more edges or nodes. Aborting.")
         return self.town_graph.edges()
             
     def __make_towns_map(self, town_file_name: str) -> list:
-        """ Construct town map from town file """        
+        """ Construct town map from town file 
+        Makes call to __add_1_town_to_map() to do each town
+        """       
         town_entries = self.__read_town_file(town_file_name)
         try:
             for entry in town_entries:                 
@@ -211,10 +261,6 @@ class MonsterInvasion:
         except Exception:
             raise RuntimeError('Could not add one or more locations to map, aborting!')            
         return list(self.town_graph.nodes())
-
-    def __free_towns(self):
-        number_free_towns = self.__number_of_remaining_towns() - len(list(set(list(self.colonised_towns.values()))))
-        return number_free_towns
 
     @staticmethod
     def get_cmdln_monsters():
@@ -236,9 +282,6 @@ class MonsterInvasion:
             raise FileNotFoundError('Could not open file, please check its name and try again!')
         return towns
 
-    def __number_of_remaining_towns(self):        
-        return len(list(self.town_graph.nodes()))
-    
     def __number_of_alive_monsters(self):
         return len(self.colonised_towns)
 
