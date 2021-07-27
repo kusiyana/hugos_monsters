@@ -6,7 +6,7 @@
 # Contact: hayden.eastwood@gmail.com, +263 779 451 256
 # -----------------------------------------------------------
 import pytest
-from solution import MonsterInvasion
+from monster import MonsterInvasion
 import random
 
 @pytest.fixture

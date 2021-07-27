@@ -1,28 +1,24 @@
 import sys
 import numpy as np
-from matplotlib import pyplot as plt
 import networkx as nx
 import random
-import collections
-import time
-
 
 class MonsterInvasion:    
     """ Class to govern all aspects of monster invasion of 
     global towns
     """
     
-    def __init__(self, towns_file):
+    def __init__(self, towns_file, initial_number_of_monsters=0):        
         self.town_file_name = towns_file
-        self.initial_number_of_monsters = self.__get_cmdln_monsters()     
+        self.initial_number_of_monsters = initial_number_of_monsters         
         self.town_graph = nx.DiGraph()                
         self.__make_towns_map(towns_file)
         self.town_initial_state = self.town_graph.copy()             
         self.colonised_towns = {}
-        self.initial_number_of_towns = self.__number_of_remaining_towns()
+        self.initial_number_of_towns = self.__number_of_remaining_towns()        
         self.previous_colonised_towns = []
         self.trapped_monsters = []
-
+        self.__sanity_check()
 
     def parachute_monsters_in(self):
         """ Parachute monsters in to random towns to begin with """        
@@ -124,7 +120,7 @@ class MonsterInvasion:
         print (' ')
 
     def run(self, steps: int):
-        """ Run a simulation for n steps """        
+        """ Run a simulation for n steps """           
         self.parachute_monsters_in()
         self.stats(0)         
         before_towns = self.colonised_towns.copy()
@@ -147,6 +143,16 @@ class MonsterInvasion:
         plt.clf()
 
     # - - - - Private methods - - - -
+    
+    def __sanity_check(self):                
+        """ Place all sanity checks to happen pre-runtime here """
+        if self.initial_number_of_monsters > self.initial_number_of_towns:
+            self.__log_io('ERROR: The number of towns must be greater than the number of monsters!')
+            sys.exit(0)
+        return True
+        
+        
+    
     @staticmethod
     def __log_io(message: str, level:int =1):
         if level==1:
@@ -154,7 +160,7 @@ class MonsterInvasion:
         elif level==2:
             deco_num = 4
         decos = '-' * deco_num
-        print (f'-- \t {decos} {message} ')
+        print (f'{decos} {message} ')
     
     def __get_town_possibilities(self, town):
         """ Get the possible transitions for each town, 
@@ -211,16 +217,15 @@ class MonsterInvasion:
         return number_free_towns
 
     @staticmethod
-    def __get_cmdln_monsters():
+    def get_cmdln_monsters():
         """ Get number of monsters from command line """
-        if len(sys.argv) < 2:            
-            raise ValueError ('HELP: Please provide number of monsters!')    
-        try:            
-            return int(sys.argv[1])
+        try:
+            return int(input('Please enter the number of monsters to rampage: \n'))
         except:
-            raise ValueError ('The number you enter has to be an integer!')
-            
-    
+            print('Please enter a valid number')
+            sys.exit()
+        
+                 
     @staticmethod
     def __read_town_file(town_file_name: str) -> list:
         try:
@@ -237,7 +242,5 @@ class MonsterInvasion:
     def __number_of_alive_monsters(self):
         return len(self.colonised_towns)
 
-if __name__ == '__main__':
-    monster = MonsterInvasion('data/world_map_medium.txt')
-    monster.run(10000)
+
     
