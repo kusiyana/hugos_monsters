@@ -1,7 +1,8 @@
 # Hugo's monster simulations!
 
-Hayden Eastwood - 26/05/2020
+Hayden Eastwood - 27/07/2021
 ----------------------------
+
 
 Summary description
 -------------------
@@ -37,6 +38,7 @@ Installing
 1. Install Python 3.9 (Earlier versions down to 3.7 will likely also work fine)
 2. Install the package requirements: "pip install -r requirements.txt"
 
+
 Configuring
 --------------------------
 1. In main.py you have the option to set:
@@ -56,10 +58,10 @@ Running
     $ Python main.py
     if monster_numbers is set to 0 in main.py, you will be prompted to enter one
 
+Final notes
+-----------
 
-Feedback
---------
-The end goal of the task itself was not entirely clear to me. Is it to make a highly generalisable set of function features that anyone without programming expertise can leverage to save time? Or is it for expert programmers who might require the ability to do very complex things, and thereby embed Pandas operations (for example) into the configuration file to achieve very specific and complex outcomes?
-
-A bit more context on the use case for the code would help in designing the solution.
-
+Given more time there would be:
+1. More extensive edge case testing
+2. Better error handling for subverive user input
+3. Optimisation of some of the methods, which were developed to optimise speed, rather than efficiency.
